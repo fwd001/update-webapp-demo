@@ -1,10 +1,14 @@
 declare global {
     /**
+     * 通用函数类型
+     */
+    type Fn = (...args: any[]) => void;
+    /**
      * 浏览器全局 Window 上挂载的自定义字段
      */
     interface Window {
       /**
-       * 业务配置（通过环境变量映射到运行时）
+       * 业务配置（通过环境变量或运行时脚本注入）
        */
       __bizConfig__?: {
         VITE_PUBLIC_PATH?: string;
@@ -14,7 +18,7 @@ declare global {
       };
   
       /**
-       * 版本更新弹窗触发函数（由 `UpdatePopup/Popup.vue` 挂载）
+       * 版本更新提示的触发函数（由 `UpdatePopup/Popup.vue` 运行时挂载）
        */
       __showUpdatePrompt?: (cb: () => void) => void;
     }

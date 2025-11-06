@@ -1,3 +1,7 @@
+<!--
+  职责：仅负责更新提示的 UI 与用户交互。
+  触发入口：`index.ts` 在检测到新版本后调用 `window.__showUpdatePrompt(cb)`。
+-->
 <template>
   <div v-if="visible" class="update-box">
     <div class="p-0 m-0">检测到新版本，点击刷新加载最新内容。</div>
@@ -11,13 +15,13 @@
   const visible = ref(false);
   let onConfirm: (() => void) | null = null;
 
-  // 全局暴露给外部调用
+  // 将触发函数注册到全局，在版本检测（index.ts）中调用以显示此弹窗
   window.__showUpdatePrompt = (cb: () => void) => {
     visible.value = true;
     onConfirm = cb;
   };
 
-  function refresh() {
+  function refresh(): void {
     visible.value = false;
     onConfirm?.();
   }
@@ -46,6 +50,7 @@
     background: #3470ff;
     color: white;
     cursor: pointer;
+    white-space: nowrap;
   }
 
   button:hover {

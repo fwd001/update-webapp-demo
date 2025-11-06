@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
+import HelloWorld from "./components/HelloWorld.vue";
+import UpdatePopup from "./components/UpdatePopup/Popup.vue";
 </script>
 
 <template>
@@ -11,7 +12,9 @@ import HelloWorld from './components/HelloWorld.vue'
       <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
     </a>
   </div>
-  <HelloWorld msg="Vite + Vue" />
+  <HelloWorld msg="Vite + Vue4" />
+  <!-- 挂载更新弹窗 -->
+  <UpdatePopup />
 </template>
 
 <style scoped>
