@@ -156,3 +156,71 @@ export {}
 2) 在 `main.ts` 调用 `updateAppInit()`；
 3) 在构建流程产出 `version.json`；
 4) 按需配置 `VITE_PUBLIC_PATH` 与 `VITE_UPDATE_INTERVAL`。
+
+---
+
+## 切换到 React 的接入指引
+
+本方案的核心逻辑（版本轮询与对比）与框架无关，切到 React 时仅需替换 UI 组件并在入口处初始化，基本逻辑保持不变：
+
+1) 复用检测逻辑：继续使用本仓库的 `src/components/UpdatePopup/index.ts`（或等价的 `update-check.ts`），无需修改。
+
+2) 替换弹窗组件：用 React 组件实现与 `Popup.vue` 等价的 UI，并在组件挂载时注册全局触发函数。
+
+```tsx
+// UpdateBanner.tsx（React 版本：注册 window.__showUpdatePrompt 并渲染提示）
+import React, { useState, useCallback, useEffect } from 'react'
+
+export function UpdateBanner() {
+  const [visible, setVisible] = useState(false)
+  const [onConfirm, setOnConfirm] = useState<(() => void) | null>(null)
+
+  const refresh = useCallback(() => {
+    setVisible(false)
+    onConfirm?.()
+  }, [onConfirm])
+
+  useEffect(() => {
+    // 在运行时挂载全局触发入口，供轮询逻辑调用
+    window.__showUpdatePrompt = (cb: () => void) => {
+      setVisible(true)
+      setOnConfirm(() => cb)
+    }
+  }, [])
+
+  if (!visible) return null
+  return (
+    <div style={{
+      position: 'fixed', left: '50%', bottom: 16, transform: 'translateX(-50%)',
+      display: 'flex', gap: 10, padding: '12px 20px', color: '#fff', background: '#333',
+      borderRadius: 8, boxShadow: '0 2px 8px rgb(0 0 0 / 30%)'
+    }}>
+      <div>检测到新版本，点击刷新加载最新内容。</div>
+      <button style={{ whiteSpace: 'nowrap', background: '#3470ff', color: '#fff', border: 'none', borderRadius: 4, padding: '6px 12px' }} onClick={refresh}>立即更新</button>
+    </div>
+  )
+}
+```
+
+3) 在 React 入口中初始化：
+
+```tsx
+// main.tsx / main.jsx（React 入口）
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import App from './App'
+import { setup as updateAppInit } from './components/UpdatePopup' // 复用轮询逻辑
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+)
+
+// 应用挂载后初始化版本更新检测
+updateAppInit()
+```
+
+注意事项：
+- 保持 `window.__showUpdatePrompt` 的签名一致：`(cb: () => void) => void`。
+- 其他配置（`VITE_PUBLIC_PATH`、`VITE_UPDATE_INTERVAL`、`isDevMode`）保持不变。
