@@ -40,20 +40,16 @@ declare global {
        * - 用于配置应用的运行时参数
        * 
        * 配置项：
-       * - VITE_PUBLIC_PATH: 公共路径，用于构建资源 URL
        * - VITE_UPDATE_INTERVAL: 版本检测轮询间隔（毫秒）
        * 
        * @example
        * ```ts
        * window.__bizConfig__ = {
-       *   VITE_PUBLIC_PATH: '/app/',
        *   VITE_UPDATE_INTERVAL: 5000
        * };
        * ```
        */
       __bizConfig__?: {
-        /** 公共路径，用于构建资源 URL（如 CDN 路径） */
-        VITE_PUBLIC_PATH?: string;
         /** 版本检测轮询间隔（毫秒），默认 10 秒 */
         VITE_UPDATE_INTERVAL: number;
         /** 可按需扩展更多配置项 */

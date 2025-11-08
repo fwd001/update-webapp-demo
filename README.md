@@ -70,7 +70,6 @@ updateAppInit()
 // 在入口或 HTML 注入
 window.__bizConfig__ = {
   VITE_UPDATE_INTERVAL: 10000, // 毫秒，默认 10000
-  VITE_PUBLIC_PATH: '/',       // 默认 '/'
 }
 ```
 
