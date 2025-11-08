@@ -1,6 +1,6 @@
 # Web 前端版本更新提示（纯前端方案）
 
-通过定时轮询构建产物中的 `version.json`，对比本地记录的版本号，检测到新版本时在页面内弹出提示；用户确认后刷新页面以加载最新静态资源。该方案零后端依赖、与框架解耦，可在 Vue/React 等任意前端项目中复用。
+通过定时轮询构建产物中的 `version.json`，对比构建时注入到 HTML 的 Window 变量（`window.__app_version`），检测到新版本时在页面内弹出提示；用户确认后刷新页面以加载最新静态资源。该方案零后端依赖、与框架解耦，可在 Vue/React 等任意前端项目中复用。
 
 ## 主要功能与用途
 
@@ -10,9 +10,11 @@
 
 ## 实现思路
 
-- 构建阶段：在 `dist/` 写入 `version.json`，包含唯一标识构建的 `version`（时间戳或 git hash）。
+- 构建阶段：
+  - 在 `dist/` 写入 `version.json`，包含唯一标识构建的 `version`（时间戳或 git hash）。
+  - 在 HTML 中注入版本信息到 Window 对象（`window.__app_version`），供运行时版本检测使用。
 - 运行时（仅生产）：使用 `useIntervalFn` 轮询 `publicPath/version.json`；结合页面可见性，前台轮询、后台暂停，切回前台立即检查一次。
-- 版本对比：将远端 `version` 与本地 `localStorage('app_version')` 比较；不同则触发全局 `window.__showUpdatePrompt(cb)` 显示更新提示；确认后写入新版本并刷新页面。
+- 版本对比：将远端 `version.json` 中的 `version` 与构建时注入的 `window.__app_version` 比较；不同则触发全局 `window.__showUpdatePrompt(cb)` 显示更新提示；确认后刷新页面加载新版本。
 
 ## 依赖与第三方库
 
@@ -48,13 +50,19 @@ app.mount('#app')
 updateAppInit()
 ```
 
-3) 生成 `version.json`
+3) 生成 `version.json` 并注入版本信息到 HTML
 
-- 使用下文“使用 Vite 生成 version.json（推荐）”或在 CI/CD 中写入 `dist/version.json`：
-
-```json
-{ "version": "<git-hash-or-timestamp>" }
-```
+- 使用下文"使用 Vite 生成 version.json 并注入版本信息（推荐）"或在 CI/CD 中：
+  - 写入 `dist/version.json`：
+    ```json
+    { "version": "<git-hash-or-timestamp>" }
+    ```
+  - 在 HTML 中注入版本信息到 Window 对象：
+    ```html
+    <script>
+      window.__app_version = "<git-hash-or-timestamp>";
+    </script>
+    ```
 
 4) 可选运行时配置
 
@@ -101,18 +109,20 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 updateAppInit()
 ```
 
-4) 生成 `version.json` 与可选配置
+4) 生成 `version.json` 并注入版本信息到 HTML
 
-- 与 Vue 方案一致：构建后在 `dist/` 写入 `version.json`；可选设置 `window.__bizConfig__`。
+- 与 Vue 方案一致：构建后在 `dist/` 写入 `version.json`，并在 HTML 中注入版本信息到 Window 对象；可选设置 `window.__bizConfig__`。
 
 5) 注意事项
 
 - 组件样式与布局可自由定制。
 - 路由懒加载或多入口不受影响；方案仅依赖全局函数与轮询逻辑。
 
-## 使用 Vite 生成 version.json（推荐）
+## 使用 Vite 生成 version.json 并注入版本信息到 HTML（推荐）
 
-在 `vite.config.ts` 中添加一个简单插件，在生产构建完成后写入 `dist/version.json`：
+在 `vite.config.ts` 中添加一个插件，在生产构建完成后：
+1. 写入 `dist/version.json` 文件
+2. 在 HTML 中注入版本信息到 Window 对象（`window.__app_version`）
 
 ```ts
 // vite.config.ts
@@ -125,21 +135,52 @@ export default defineConfig({
   plugins: [
     vue(),
     {
-      name: 'generate-version',
+      name: 'generate-version-and-inject',
       closeBundle() {
-        const version = { version: new Date().toISOString() } // 可替换为 git hash
+        // 生成版本信息（可替换为 git hash）
+        const version = { version: new Date().toISOString() }
         const distPath = path.resolve(__dirname, 'dist')
         const versionFile = path.resolve(distPath, 'version.json')
-        if (!fs.existsSync(distPath)) fs.mkdirSync(distPath, { recursive: true })
+        const htmlFile = path.resolve(distPath, 'index.html')
+
+        // 确保构建产物目录存在
+        if (!fs.existsSync(distPath)) {
+          fs.mkdirSync(distPath, { recursive: true })
+        }
+
+        // 1. 生成 version.json 文件
         fs.writeFileSync(versionFile, JSON.stringify(version), 'utf-8')
         console.log('✅ version.json 已生成:', version)
+
+        // 2. 在 HTML 中注入版本信息到 Window 对象
+        if (fs.existsSync(htmlFile)) {
+          try {
+            let htmlContent = fs.readFileSync(htmlFile, 'utf-8')
+            
+            // 检查是否已经注入过版本信息，避免重复注入
+            if (!htmlContent.includes('window.__app_version')) {
+              const injectScript = `
+    <script>
+      // 注入构建版本信息到 Window 对象，供运行时版本检测使用
+      window.__app_version = ${JSON.stringify(version.version)};
+    </script>`
+
+              // 在 </title> 标签后注入脚本
+              htmlContent = htmlContent.replace(/<\/title>/i, `</title>${injectScript}`)
+              fs.writeFileSync(htmlFile, htmlContent, 'utf-8')
+              console.log('✅ 版本信息已注入到 HTML！')
+            }
+          } catch (e) {
+            console.warn('注入版本信息到 HTML 失败:', e)
+          }
+        }
       },
     },
   ],
 })
 ```
 
-> 若使用 CI/CD，也可在构建脚本阶段写入上述文件，效果等同。
+> 若使用 CI/CD，也可在构建脚本阶段写入 `version.json` 并在 HTML 中注入版本信息，效果等同。
 
 ## 配置项
 

@@ -1,3 +1,20 @@
+/**
+ * 全局样式文件
+ * 
+ * 功能说明：
+ * - 定义应用的全局样式和主题
+ * - 支持深色和浅色两种颜色方案
+ * - 提供响应式布局基础样式
+ */
+
+/**
+ * 根元素样式
+ * 
+ * 设计特点：
+ * - 使用系统字体栈，确保跨平台一致性
+ * - 支持深色和浅色两种颜色方案
+ * - 优化字体渲染，提升可读性
+ */
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -13,15 +30,35 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+/**
+ * 链接样式
+ * 
+ * 设计特点：
+ * - 使用品牌色（#646cff）
+ * - 悬停时颜色加深，提供交互反馈
+ * - 移除默认下划线，保持简洁
+ */
 a {
   font-weight: 500;
   color: #646cff;
   text-decoration: inherit;
 }
+
+/**
+ * 链接悬停效果
+ * 颜色加深，提供视觉反馈
+ */
 a:hover {
   color: #535bf2;
 }
 
+/**
+ * 页面主体样式
+ * 
+ * 设计特点：
+ * - 使用 Flexbox 居中布局
+ * - 设置最小尺寸，确保在小屏幕上也能正常显示
+ */
 body {
   margin: 0;
   display: flex;
@@ -30,11 +67,26 @@ body {
   min-height: 100vh;
 }
 
+/**
+ * 一级标题样式
+ * 
+ * 设计特点：
+ * - 大字号，突出重要性
+ * - 行高优化，提升可读性
+ */
 h1 {
   font-size: 3.2em;
   line-height: 1.1;
 }
 
+/**
+ * 按钮基础样式
+ * 
+ * 设计特点：
+ * - 圆角设计，现代感
+ * - 透明边框，悬停时显示
+ * - 过渡动画，提升交互体验
+ */
 button {
   border-radius: 8px;
   border: 1px solid transparent;
@@ -46,18 +98,41 @@ button {
   cursor: pointer;
   transition: border-color 0.25s;
 }
+
+/**
+ * 按钮悬停效果
+ * 显示边框，提供交互反馈
+ */
 button:hover {
   border-color: #646cff;
 }
+
+/**
+ * 按钮焦点样式
+ * 提供键盘导航的可访问性支持
+ */
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
+/**
+ * 卡片容器样式
+ * 
+ * 用于包裹内容区域，提供内边距
+ */
 .card {
   padding: 2em;
 }
 
+/**
+ * 应用根容器样式
+ * 
+ * 设计特点：
+ * - 最大宽度限制，确保在大屏幕上不会过宽
+ * - 居中布局
+ * - 文本居中，适合展示型页面
+ */
 #app {
   max-width: 1280px;
   margin: 0 auto;
@@ -65,6 +140,12 @@ button:focus-visible {
   text-align: center;
 }
 
+/**
+ * 浅色主题媒体查询
+ * 
+ * 当用户系统偏好浅色主题时应用
+ * 自动适配系统主题设置
+ */
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
